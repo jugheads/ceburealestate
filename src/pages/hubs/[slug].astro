@@ -1,0 +1,14 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import {getCollection} from 'astro:content';
+const slugify=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+export async function getStaticPaths(){
+ const all=await getCollection('articles',({data})=>['approved','published'].includes(data.status));
+ const hubs=[...new Set(all.map(a=>a.data.hub).filter(Boolean))];
+ return hubs.map(h=>({params:{slug:slugify(h)},props:{hub:h,items:all.filter(a=>a.data.hub===h)}}));
+}
+const {hub,items}=Astro.props;
+---
+<Layout title={hub} description={`Articles and guides about ${hub}`}>
+<h1>{hub}</h1><ul>{items.map(a=><li><a href={`/articles/${a.data.slug}/`}>{a.data.title}</a></li>)}</ul>
+</Layout>

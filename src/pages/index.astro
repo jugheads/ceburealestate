@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import {getCollection} from 'astro:content';
+const all=await getCollection('articles',({data})=>['approved','published'].includes(data.status));
+const hubs=[...new Set(all.map(a=>a.data.hub).filter(Boolean))];
+---
+<Layout title="Knowledge Hub" description="Guides and resources">
+<h1>Knowledge Hub</h1><p>Explore our topic guides and supporting articles.</p>
+{hubs.map(h=><section><h2><a href={`/hubs/${h.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}/`}>{h}</a></h2>
+<ul>{all.filter(a=>a.data.hub===h).map(a=><li><a href={`/articles/${a.data.slug}/`}>{a.data.title}</a></li>)}</ul></section>)}
+</Layout>

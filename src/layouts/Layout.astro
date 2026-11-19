@@ -1,0 +1,16 @@
+---
+const {title, description=''} = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title><meta name="description" content={description} />
+<style>
+:root{font-family:system-ui,sans-serif;color:#20252b;background:#fff}body{margin:0;line-height:1.7}
+header,main,footer{max-width:850px;margin:auto;padding:1.25rem}header,footer{border-bottom:1px solid #e5e7eb}
+a{color:#1457a6}h1,h2,h3{line-height:1.25}.muted{color:#667085;font-size:.92rem}
+.content{overflow-wrap:anywhere}.content img{max-width:100%;height:auto}
+</style>
+</head><body><header><a href="/">Home</a></header><main><slot /></main>
+<footer class="muted">Information is for general educational purposes. Verify important details before acting.</footer></body></html>
