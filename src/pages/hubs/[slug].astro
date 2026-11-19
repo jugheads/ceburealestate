@@ -1,22 +1,144 @@
+
 ---
+import { getCollection } from "astro:content";
 
 function slugify(text) {
-  return text
+  return String(text ?? "")
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
-import Layout from '../../layouts/Layout.astro';
-import {getCollection} from 'astro:content';
-const slugify=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-export async function getStaticPaths(){
- const all=await getCollection('articles',({data})=>['approved','published'].includes(data.status));
- const hubs=[...new Set(all.map(a=>a.data.hub).filter(Boolean))];
- return hubs.map(h=>({params:{slug:slugify(h)},props:{hub:h,items:all.filter(a=>a.data.hub===h)}}));
+
+export async function getStaticPaths() {
+  const hubs = await getCollection("hubs");
+
+  return hubs.map((hub) => ({
+    params: {
+      slug: hub.slug ?? slugify(hub.data.title),
+    },
+    props: { hub },
+  }));
 }
-const {hub,items}=Astro.props;
+
+const { hub } = Astro.props;
+const articles = await getCollection("articles");
+
+const relatedArticles = articles.filter((article) => {
+  const hubSlug = hub.slug ?? slugify(hub.data.title);
+
+  return (
+    article.data.hub === hubSlug ||
+    article.data.hubSlug === hubSlug
+  );
+});
+
+const site = Astro.site ?? new URL("https://example.com");
+const canonicalURL = new URL(
+  `/hubs/${hub.slug ?? slugify(hub.data.title)}/`,
+  site
+);
+
+const title = hub.data.seoTitle || `${hub.data.title} | Complete Guide`;
+const description =
+  hub.data.metaDescription ||
+  hub.data.description ||
+  `Explore our comprehensive guide to ${hub.data.title}.`;
+
 ---
-<Layout title={hub} description={`Articles and guides about ${hub}`}>
-<h1>{hub}</h1><ul>{items.map(a=><li><a href={`/articles/${a.data.slug}/`}>{a.data.title}</a></li>)}</ul>
-</Layout>
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonicalURL} />
+
+  <meta name="robots" content="index, follow" />
+</head>
+
+<body>
+  <header>
+    <nav aria-label="Breadcrumb">
+      <a href="/">Home</a> /
+      <span>{hub.data.title}</span>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <h1>{hub.data.title}</h1>
+
+      {hub.data.description && (
+        <p>{hub.data.description}</p>
+      )}
+
+      {hub.data.content && (
+        <section>
+          <div set:html={hub.data.content} />
+        </section>
+      )}
+
+      <section>
+        <h2>Explore Related Articles</h2>
+
+        {relatedArticles.length > 0 ? (
+          <ul>
+            {relatedArticles.map((article) => (
+              <li>
+                <a href={`/articles/${article.slug}/`}>
+                  {article.data.title}
+                </a>
+                {article.data.description && (
+                  <p>{article.data.description}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>More articles are coming soon.</p>
+        )}
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <p>© {new Date().getFullYear()} All rights reserved.</p>
+  </footer>
+</body>
+</html>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.7;
+    max-width: 1100px;
+    margin: auto;
+    padding: 24px;
+    color: #252525;
+  }
+
+  main {
+    margin-top: 40px;
+  }
+
+  a {
+    color: #176b48;
+  }
+
+  h1, h2 {
+    line-height: 1.3;
+  }
+
+  li {
+    margin-bottom: 24px;
+  }
+</style>
